@@ -276,6 +276,8 @@ func (h *Handle) RuleListFiltered(family int, filter *Rule, filterMask uint64) (
 				continue
 			case filterMask&RT_FILTER_MASK != 0 && rule.Mask != filter.Mask:
 				continue
+			case filterMask&RT_FILTER_OIF != 0 && rule.OifName != filter.OifName: // valid when family is v4 and all
+				continue
 			}
 		}
 
