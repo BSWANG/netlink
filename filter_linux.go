@@ -647,6 +647,16 @@ func EncodeActions(attr *nl.RtAttr, actions []Action) error {
 			tun := nl.TcTunnelKey{
 				Action: int32(action.Action),
 			}
+			if action.Vid > 0 {
+				aopts.AddRtAttr(nl.TCA_VLAN_PUSH_VLAN_ID, nl.Uint16Attr(action.Vid))
+			}
+			if action.Prio != nil {
+				aopts.AddRtAttr(nl.TCA_VLAN_PUSH_VLAN_PRIORITY, nl.Uint8Attr(*action.Prio))
+			}
+			if action.Proto > 0 {
+				aopts.AddRtAttr(nl.TCA_VLAN_PUSH_VLAN_PROTOCOL, nl.Uint8Attr(action.Proto))
+			}
+
 			toTcGen(action.Attrs(), &tun.TcGen)
 			aopts.AddRtAttr(nl.TCA_TUNNEL_KEY_PARMS, tun.Serialize())
 		case *GenericAction:
@@ -709,6 +719,14 @@ func parseActions(tables []syscall.NetlinkRouteAttr) ([]Action, error) {
 							action.(*VlanAction).ActionAttrs = ActionAttrs{}
 							toAttrs(&tun.TcGen, action.Attrs())
 							action.(*VlanAction).Action = VlanKeyAct(tun.Action)
+						case nl.TCA_VLAN_PUSH_VLAN_ID:
+							vid := native.Uint16(adatum.Value[0:2])
+							action.(*VlanAction).Vid = vid
+						case nl.TCA_VLAN_PUSH_VLAN_PROTOCOL:
+							action.(*VlanAction).Proto = adatum.Value[0]
+						case nl.TCA_VLAN_PUSH_VLAN_PRIORITY:
+							prio := adatum.Value[0]
+							action.(*VlanAction).Prio = &prio
 						}
 					case "mirred":
 						switch adatum.Attr.Type {

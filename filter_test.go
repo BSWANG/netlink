@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package netlink
@@ -35,6 +36,44 @@ func TestFilterADDVlan(t *testing.T) {
 	}
 	vlanAct := NewVlanKeyAction()
 	vlanAct.Action = TCA_VLAN_KEY_POP
+
+	//tunAct := NewTunnelKeyAction()
+	//tunAct.Action = TCA_TUNNEL_KEY_UNSET
+
+	u32 := &U32{
+		FilterAttrs: FilterAttrs{
+			LinkIndex: link.Attrs().Index,
+			Parent:    HANDLE_MIN_INGRESS,
+			Priority:  40000,
+			Protocol:  uint16(VLAN_PROTOCOL_8021Q),
+		},
+		Sel: &TcU32Sel{
+			Nkeys: 1,
+			Flags: TC_U32_TERMINAL,
+			Keys: []TcU32Key{
+				{
+					Mask: 0x0,
+					Val:  0x0,
+					Off:  0x0,
+				},
+			},
+		},
+		Actions: []Action{vlanAct},
+	}
+	err = FilterAdd(u32)
+	t.Logf("err%v", err)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFilterPushVlan(t *testing.T) {
+	link, err := LinkByName("eth0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	vlanAct := NewVlanKeyAction()
+	vlanAct.Action = TCA_VLAN_KEY_PUSH
 
 	//tunAct := NewTunnelKeyAction()
 	//tunAct.Action = TCA_TUNNEL_KEY_UNSET
