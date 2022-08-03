@@ -117,6 +117,7 @@ const (
 	SizeofTcMirred       = SizeofTcGen + 0x08
 	SizeofTcTunnelKey    = SizeofTcGen + 0x04
 	SizeofTcSkbEdit      = SizeofTcGen
+	SizeofTcVlan         = SizeofTcGen + 0x04
 	SizeofTcPolice       = 2*SizeofTcRateSpec + 0x20
 	SizeofTcSfqQopt      = 0x0b
 	SizeofTcSfqRedStats  = 0x18
@@ -983,6 +984,28 @@ const (
 	TCA_VLAN_PAD
 	TCA_VLAN_PUSH_VLAN_PRIORITY
 )
+
+// struct tc_vlan {
+// tc_gen;
+// int v_action;
+// };
+
+type TcVlan struct {
+	TcGen
+	VlanAction int32
+}
+
+func (x *TcVlan) Len() int {
+	return SizeofTcVlan
+}
+
+func DeserializeTcVlan(b []byte) *TcVlan {
+	return (*TcVlan)(unsafe.Pointer(&b[0:SizeofTcVlan][0]))
+}
+
+func (x *TcVlan) Serialize() []byte {
+	return (*(*[SizeofTcVlan]byte)(unsafe.Pointer(x)))[:]
+}
 
 const (
 	TCA_FLOWER_UNSPEC = iota

@@ -422,20 +422,35 @@ func (filter *BpfFilter) Attrs() *FilterAttrs {
 type VlanKeyAct uint8
 
 const (
-	TCA_VLAN_KEY_POP VlanKeyAct = 1 // pop vlan
+	TCA_VLAN_KEY_POP VlanKeyAct = iota + 1 // pop vlan
+	TCA_VLAN_KEY_PUSH
+	TCA_VLAN_KEY_MODIFY
+	TCA_VLAN_KEY_POP_ETH
+	TCA_VLAN_KEY_PUSH_ETH
 )
 
 func (k VlanKeyAct) String() string {
 	switch k {
 	case TCA_VLAN_KEY_POP:
 		return "pop"
+	case TCA_VLAN_KEY_PUSH:
+		return "push"
+	case TCA_VLAN_KEY_MODIFY:
+		return "modify"
+	case TCA_VLAN_KEY_POP_ETH:
+		return "pop_eth"
+	case TCA_VLAN_KEY_PUSH_ETH:
+		return "push_eth"
 	}
 	return "undefined"
 }
 
 type VlanAction struct {
 	ActionAttrs
-	Action   VlanKeyAct
+	Action VlanKeyAct
+	Vid    uint16 // vlan id
+	Prio   *uint8
+	Proto  uint8
 }
 
 func (action *VlanAction) Type() string {
