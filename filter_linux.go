@@ -41,6 +41,7 @@ type U32 struct {
 	RedirIndex int
 	Sel        *TcU32Sel
 	Actions    []Action
+	Police     nl.TcPolice
 }
 
 func (filter *U32) Attrs() *FilterAttrs {
@@ -53,7 +54,8 @@ func (filter *U32) Type() string {
 
 // Fw filter filters on firewall marks
 // NOTE: this is in filter_linux because it refers to nl.TcPolice which
-//       is defined in nl/tc_linux.go
+//
+//	is defined in nl/tc_linux.go
 type Fw struct {
 	FilterAttrs
 	ClassId uint32
@@ -845,6 +847,16 @@ func parseU32Data(filter Filter, data []syscall.NetlinkRouteAttr) (bool, error) 
 			u32.Hash = native.Uint32(datum.Value)
 		case nl.TCA_U32_LINK:
 			u32.Link = native.Uint32(datum.Value)
+		case nl.TCA_U32_POLICE:
+			u32.Police = *nl.DeserializeTcPolice(datum.Value)
+
+			adata, _ := nl.ParseRouteAttr(datum.Value)
+			for _, aattr := range adata {
+				switch aattr.Attr.Type {
+				case nl.TCA_POLICE_TBF:
+					u32.Police = *nl.DeserializeTcPolice(aattr.Value)
+				}
+			}
 		}
 	}
 	return detailed, nil
