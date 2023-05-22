@@ -41,6 +41,7 @@ type U32 struct {
 	RedirIndex int
 	Sel        *TcU32Sel
 	Actions    []Action
+	Police     nl.TcPolice
 }
 
 func (filter *U32) Attrs() *FilterAttrs {
@@ -933,6 +934,14 @@ func parseU32Data(filter Filter, data []syscall.NetlinkRouteAttr) (bool, error) 
 			u32.Hash = native.Uint32(datum.Value)
 		case nl.TCA_U32_LINK:
 			u32.Link = native.Uint32(datum.Value)
+		case nl.TCA_U32_POLICE:
+			adata, _ := nl.ParseRouteAttr(datum.Value)
+			for _, aattr := range adata {
+				switch aattr.Attr.Type {
+				case nl.TCA_POLICE_TBF:
+					u32.Police = *nl.DeserializeTcPolice(aattr.Value)
+				}
+			}
 		}
 	}
 	return detailed, nil
